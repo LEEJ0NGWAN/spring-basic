@@ -9,7 +9,9 @@ import hello.core.member.MemoryMemberRepository;
 
 public class OrderServiceImpl implements OrderService {
 
-    private final MemberRepository memberRepository = new MemoryMemberRepository();
+//    // DIP 위반
+//    private final MemberRepository memberRepository = new MemoryMemberRepository();
+    private MemberRepository memberRepository;
 
 //    // OCP, DIP 위반
 //    private final DiscountPolicy discountPolicy = new FixDiscountPolicy();  // DIP 위반(구현 클래스 의존)
@@ -17,6 +19,11 @@ public class OrderServiceImpl implements OrderService {
 
     // OCP, DIP를 위한 개선책 -> nullPointerException 극복을 위한 외부로부터 객체 주입이 필요
     private DiscountPolicy discountPolicy;
+
+    public OrderServiceImpl(MemberRepository memberRepository, DiscountPolicy discountPolicy) {
+        this.memberRepository = memberRepository;
+        this.discountPolicy = discountPolicy;
+    }
 
     @Override
     public Order createOrder(Long memberId, String itemName, int itemPrice) {
