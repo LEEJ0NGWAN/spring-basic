@@ -1,4 +1,7 @@
 # Spring
+
+스프링 프레임워크의 내부 동작에 대해 공부한 내용입니다.
+
 - [스프링이란?](./README/Spring.md)
 - [IoC와 DI](./README/IoC.md)
 - [컨테이너](./README/Container.md)
