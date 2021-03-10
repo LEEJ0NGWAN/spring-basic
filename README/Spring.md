@@ -1,4 +1,4 @@
-[돌아가기](./README.md)
+[돌아가기](https://github.com/LEEJ0NGWAN/spring-basic)
 
 # 스프링이란?
 

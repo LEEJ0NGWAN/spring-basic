@@ -1,4 +1,5 @@
-[돌아가기](./README.md)
+[돌아가기](https://github.com/LEEJ0NGWAN/spring-basic)
+
 # 다양한 의존관계 주입 방법
 
 - 생성자 주입
