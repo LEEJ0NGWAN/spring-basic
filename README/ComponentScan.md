@@ -1,4 +1,5 @@
-[돌아가기](./README.md)
+[돌아가기](https://github.com/LEEJ0NGWAN/spring-basic)
+
 # 컴포넌트 스캔
 
 `@Bean` 이나 `<bean>` 같은 직접적인 빈 등록 과정 없이 자동으로 스프링 빈을 등록하는 기능
