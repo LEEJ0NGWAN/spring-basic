@@ -116,3 +116,120 @@
 → 사용할 때마다 매번 DI 완료된 새로운 인스턴스가 필요할 때 사용
 
 그러나, 대부분은 싱글톤 빈으로 해결
+
+# 웹 스코프
+
+웹 환경에서 동작하는 범위
+
+프로토타입 스코프과 다르게, 웹 스코프는 해당 스코프 종료 시점까지 관리 (종료 메소드 호출)
+
+## 웹 스코프 종류
+
+- request
+
+    각 요청이 처리될 때까지 유지되는 스코프
+
+    → 각 요청마다 빈 인스턴스 생성 및 관리
+
+- session
+
+    세션과 동일 생명주기 스코프
+
+- application
+
+    서블릿 컨텍스트와 동일 생명주기 스코프
+
+- websocket
+
+    웹 소켓과 동일 생명주기 스코프
+
+### 웹 환경 ApplicationContext
+
+웹 라이브러리(org.springframework.boot:spring-boot-starter-web) 유무에 따라
+
+스프링 부트는 애플리케이션을 구동하는 기반 ApplicationContext가 달라진다
+
+- 웹 라이브러리가 없다면 → `AnnotationConfigApplicationContext`
+- 웹 라이브러리가 있다면 → `AnnotationConfigServletWebServerApplicationContext`
+
+# request 스코프 빈 주의사항
+
+request 스코프의 경우 당장 클라이언트로부터 리퀘스트 요청이 있는 경우에만 빈 생성이 가능하다
+
+→ 즉, 단순히 스프링 애플리케이션이 막 시작 되는 시점에서 리퀘스트 스코프 빈을 요구하면 오류가 발생한다
+
+## request 스코브 빈 처리
+
+request 스코프 빈을 처리하려는 경우, 실제 빈이 서비스 내부에서 처리되는 시점에만
+
+즉시 꺼내어 호출될 수 있도록 설정해주면 리퀘스트 스코프의 급발진 문제점을 막을 수 있다
+
+### Provier 방식
+
+ObjectProvider를 이용하여 웹 요청이 오는 순간에 리퀘스트 스코프 빈을 조회하는 방식
+
+→ ObjectProvider<T>.getObject()로 객체를 조회하려는 순간 리퀘스트 스코프 빈이 최초 생성 가능
+
+```java
+@Component
+@Scope(value="request")
+class RequestBean {
+	...
+}
+
+@Controller
+public class Controller {
+
+	private final ObjectProvider<RequestBean> provider;
+
+	@Autowired
+	public Controller(ObjectProvider<RequestBean> provider) {
+		this.provider = provider;
+	}
+
+	@RequestMapping("test")
+	@ResponseBody
+	public String test() {
+		RequestBean bean = provider.getObject(); // 리퀘스트 스코프 빈 최초 생성 시점
+		return bean.toString();
+	}
+}
+```
+
+### 프록시 모드 방식
+
+리퀘스트 스코프 빈의 가짜 프록시 클래스를 만드는 방식
+
+웹 요청 유무와 상관 없이, 만들어진 프록시 클래스를 필요한 곳에 미리 주입해둔다
+
+→ `@Scope(value = "request", proxyMode = ScopedProxyMode.TARGET_CLASS)` 설정 이용
+
+(인터페이스는 ScoperProxyMode.INTERFACES 사용)
+
+```java
+@Component
+@Scope(value = "request", proxyMode = ScopedProxyMode.TARGET_CLASS)
+class RequestBean {
+	...
+}
+
+@Controller
+public class Controller {
+	private final RequestBean bean;
+
+	@Autowired
+	public Controller(RequestBean bean) {
+		this.bean = bean;
+	}
+
+	...
+}
+```
+
+**프록시 클래스 빈 동작원리?**
+
+스프링 컨테이너가 바이트코드 조작 라이브러리를 통해 기존 리퀘스트 스코프 빈을 상속하는 프록시 클래스 생성
+
+→ 프록시 클래스 빈에서 기존 리퀘스트 스코프 빈의 어떤 기능을 사용할 때 진짜 리퀘스트 스코프 빈을 요청
+
+(위임 로직)
